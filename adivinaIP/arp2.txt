@@ -1,0 +1,30 @@
+
+Interfaz: 192.168.59.1 --- 0x5
+  Direcci¢n de Internet          Direcci¢n f¡sica      Tipo
+  192.168.59.254        00-50-56-f8-a8-75     din mico  
+  192.168.59.255        ff-ff-ff-ff-ff-ff     est tico  
+  224.0.0.22            01-00-5e-00-00-16     est tico  
+  224.0.0.251           01-00-5e-00-00-fb     est tico  
+  224.0.0.252           01-00-5e-00-00-fc     est tico  
+  239.255.255.250       01-00-5e-7f-ff-fa     est tico  
+  255.255.255.255       ff-ff-ff-ff-ff-ff     est tico  
+
+Interfaz: 192.168.61.220 --- 0x10
+  Direcci¢n de Internet          Direcci¢n f¡sica      Tipo
+  192.168.61.57         d6-4a-b4-1e-88-78     din mico  
+  192.168.61.255        ff-ff-ff-ff-ff-ff     est tico  
+  224.0.0.22            01-00-5e-00-00-16     est tico  
+  224.0.0.251           01-00-5e-00-00-fb     est tico  
+  224.0.0.252           01-00-5e-00-00-fc     est tico  
+  239.255.255.250       01-00-5e-7f-ff-fa     est tico  
+  255.255.255.255       ff-ff-ff-ff-ff-ff     est tico  
+
+Interfaz: 192.168.133.1 --- 0x12
+  Direcci¢n de Internet          Direcci¢n f¡sica      Tipo
+  192.168.133.254       00-50-56-f4-0c-11     din mico  
+  192.168.133.255       ff-ff-ff-ff-ff-ff     est tico  
+  224.0.0.22            01-00-5e-00-00-16     est tico  
+  224.0.0.251           01-00-5e-00-00-fb     est tico  
+  224.0.0.252           01-00-5e-00-00-fc     est tico  
+  239.255.255.250       01-00-5e-7f-ff-fa     est tico  
+  255.255.255.255       ff-ff-ff-ff-ff-ff     est tico  
