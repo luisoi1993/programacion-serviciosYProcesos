@@ -1,0 +1,7 @@
+Starting Nmap 7.95 ( https://nmap.org ) at 2024-10-24 12:42 Hora de verano romance
+Nmap scan report for 192.168.59.254
+Host is up (0.00011s latency).
+MAC Address: 00:50:56:E9:1F:98 (VMware)
+Nmap scan report for 192.168.59.1
+Host is up.
+Nmap done: 256 IP addresses (2 hosts up) scanned in 8.95 seconds

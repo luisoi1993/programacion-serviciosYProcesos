@@ -1,0 +1,35 @@
+Starting Nmap 7.95 ( https://nmap.org ) at 2024-10-24 12:42 Hora de verano romance
+Nmap scan report for 192.168.59.1
+Host is up (0.00064s latency).
+Not shown: 65507 closed tcp ports (reset)
+PORT      STATE    SERVICE
+80/tcp    open     http
+135/tcp   open     msrpc
+137/tcp   filtered netbios-ns
+139/tcp   open     netbios-ssn
+443/tcp   open     https
+445/tcp   open     microsoft-ds
+902/tcp   open     iss-realsecure
+912/tcp   open     apex-mesh
+3306/tcp  open     mysql
+3307/tcp  open     opsession-prxy
+3308/tcp  open     tns-server
+3389/tcp  open     ms-wbt-server
+4433/tcp  open     vop
+5040/tcp  open     unknown
+5357/tcp  open     wsdapi
+6402/tcp  open     boe-eventsrv
+8080/tcp  open     http-proxy
+8733/tcp  open     ibus
+27036/tcp open     unknown
+33060/tcp open     mysqlx
+37058/tcp open     unknown
+49664/tcp open     unknown
+49665/tcp open     unknown
+49666/tcp open     unknown
+49667/tcp open     unknown
+49668/tcp open     unknown
+49669/tcp open     unknown
+49675/tcp open     unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 10.88 seconds
