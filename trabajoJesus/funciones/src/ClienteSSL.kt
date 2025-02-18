@@ -7,16 +7,17 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import java.util.Scanner
 
+// esta clase es el cliente q se conecta al servidor con ssl
 class ClienteSSL {
     private val escaner = Scanner(System.`in`)
 
     fun iniciar() {
-        var continuar = true   // creamos una variable para seguir o no dentro del bucle.
+        var continuar = true
 
-        while (continuar) {   // bucle que se repite mientras "continuar" sea verdadero.
+        while (continuar) {
             println("¿Desea registrarse (1), iniciar sesión (2) o salir (3)?")
             val opcion = escaner.nextInt()
-            escaner.nextLine()  // limpiamos el buffer para que no queden saltos de línea.
+            escaner.nextLine() // esto es pa q no se quede pillado el scanner
 
             if (opcion == 3) {
                 println("Saliendo del programa...")
@@ -29,96 +30,101 @@ class ClienteSSL {
             println("Ingrese su contraseña:")
             val contraseña = escaner.nextLine()
 
+            // ruta donde esta el almacen de claves
             val rutaAlmacen = "C:\\Users\\luis\\Desktop\\trabajoJesus\\funciones\\src\\almacen"
-            val archivo = java.io.File(rutaAlmacen)  // creamos un objeto File para verificar la existencia del archivo.
+            val archivo = java.io.File(rutaAlmacen)
 
-            if (!archivo.exists()) {  // si no existe el archivo en la ruta indicada.
+            if (!archivo.exists()) { // si no encuentra el almacen da error
                 println("ERROR: No se encontró el archivo de almacén en la ruta: $rutaAlmacen")
-                continue  // volvemos al menú principal sin cerrar el programa.
+                continue
             }
 
             try {
-                val almacen = KeyStore.getInstance("JKS")   // creamos un KeyStore para manejar las claves.
-                almacen.load(FileInputStream(rutaAlmacen), "1234567".toCharArray())  // cargamos el almacén con una contraseña.
+                // cargar el almacen de claves
+                val almacen = KeyStore.getInstance("JKS")
+                almacen.load(FileInputStream(rutaAlmacen), "1234567".toCharArray())
 
-                val gestorClaves = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())  // creamos un gestor de claves.
-                gestorClaves.init(almacen, "1234567".toCharArray())   // inicializamos el gestor con la clave.
+                // gestor de claves q usa el almacen
+                val gestorClaves = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
+                gestorClaves.init(almacen, "1234567".toCharArray())
 
-                val gestorConfianza = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())   // creamos un gestor de confianza.
-                gestorConfianza.init(almacen)   // inicializamos el gestor de confianza.
+                // gestor de confianza pa verificar el servidor
+                val gestorConfianza = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+                gestorConfianza.init(almacen)
 
-                val contexto = SSLContext.getInstance("TLS")   // creamos un contexto SSL para comunicación segura.
-                contexto.init(gestorClaves.keyManagers, gestorConfianza.trustManagers, null)   // inicializamos el contexto con los gestores.
+                // contexto SSL q usa TLS
+                val contexto = SSLContext.getInstance("TLS")
+                contexto.init(gestorClaves.keyManagers, gestorConfianza.trustManagers, null)
 
-                val fabricaSSL = contexto.socketFactory   // creamos una fábrica de sockets SSL.
-                val cliente = fabricaSSL.createSocket("localhost", 6000)  // creamos un socket SSL conectado al servidor en localhost, puerto 6000.
+                val fabricaSSL = contexto.socketFactory // crea la fabrica de sockets seguros
+                val cliente = fabricaSSL.createSocket("localhost", 6000) // conecta al servidor en el puerto 6000
 
-                val salida = DataOutputStream(cliente.getOutputStream())   // creamos un flujo de salida para enviar datos al servidor.
-                val entrada = DataInputStream(cliente.getInputStream())   // creamos un flujo de entrada para recibir datos del servidor.
+                val salida = DataOutputStream(cliente.getOutputStream()) // pa mandar datos al servidor
+                val entrada = DataInputStream(cliente.getInputStream()) // pa recibir datos del servidor
 
-                salida.writeInt(opcion)   // enviamos la opción seleccionada por el usuario.
-                salida.writeUTF(nombreUsuario)  // enviamos el nombre de usuario.
-                salida.writeUTF(contraseña)  // enviamos la contraseña.
+                // manda la opcion y las credenciales al servidor
+                salida.writeInt(opcion)
+                salida.writeUTF(nombreUsuario)
+                salida.writeUTF(contraseña)
 
-                val respuesta = entrada.readUTF()   // leemos la respuesta del servidor.
-                println(respuesta)   // mostramos la respuesta.
+                val respuesta = entrada.readUTF() // recibe la respuesta del servidor
+                println(respuesta) // la muestra en pantalla
 
-                if (respuesta == "Autenticación exitosa") {   // si la autenticación fue exitosa.
+                if (respuesta == "Autenticación exitosa") { // si el usuario y contraseña son correctos
                     var operacion: Int
                     do {
+                        // menu de opciones
                         println("Seleccione una operación:")
                         println("1. Enviar mensaje cifrado")
                         println("2. Guardar información en fichero de texto")
                         println("3. Cerrar sesión")
                         operacion = escaner.nextInt()
-                        escaner.nextLine()  // limpiamos el buffer.
+                        escaner.nextLine()
 
                         when (operacion) {
-                            1 -> {
+                            1 -> { // enviar mensaje cifrado
                                 println("Ingrese el mensaje a enviar:")
                                 val mensaje = escaner.nextLine()
 
-                                salida.writeUTF("ENVIAR_MENSAJE")   // enviamos la operación "ENVIAR_MENSAJE".
+                                salida.writeUTF("ENVIAR_MENSAJE") // avisa al servidor
+                                val clave = UtilesCripto.generarClaveAES() // genera clave pa cifrar
+                                val mensajeCifrado = UtilesCripto.cifrar(mensaje, clave) // cifra el mensaje
+                                salida.writeUTF(mensajeCifrado) // manda el mensaje cifrado
+                                salida.write(clave.encoded) // manda la clave
 
-                                val clave = UtilesCripto.generarClaveAES()  // generamos una clave AES.
-                                val mensajeCifrado = UtilesCripto.cifrar(mensaje, clave)  // ciframos el mensaje.
-
-                                salida.writeUTF(mensajeCifrado)  // enviamos el mensaje cifrado.
-                                salida.write(clave.encoded)   // enviamos la clave.
-
-                                val respuestaServidor = entrada.readUTF()   // leemos la respuesta del servidor.
-                                println(respuestaServidor)   // mostramos la respuesta.
-                            }
-                            2 -> {
-                                println("Ingrese la información que desea guardar en el fichero de texto:")
-                                val informacion = escaner.nextLine()
-
-                                salida.writeUTF("GUARDAR")   // enviamos la operación "GUARDAR".
-
-                                salida.writeUTF(informacion)   // enviamos la información a guardar.
-
-                                val respuestaServidor = entrada.readUTF()   // leemos la respuesta del servidor.
+                                val respuestaServidor = entrada.readUTF() // recibe la respuesta del servidor
                                 println(respuestaServidor)
                             }
-                            3 -> println("Cerrando sesión y volviendo al menú principal...")
-                            else -> println("Opción no válida, intente de nuevo.")  // si la opción no es válida, mostramos un mensaje de error.
+                            2 -> { // guardar información en un fichero
+                                println("Ingrese la información que desea guardar:")
+                                val informacion = escaner.nextLine()
+
+                                salida.writeUTF("GUARDAR") // avisa al servidor
+                                salida.writeUTF(informacion) // manda la info
+
+                                val respuestaServidor = entrada.readUTF() // recibe la respuesta del servidor
+                                println(respuestaServidor)
+                            }
+                            3 -> {
+                                salida.writeUTF("CERRAR")  // avisa al servidor q cierra sesion
+                                println("Cerrando sesión y volviendo al menú principal...")
+                            }
+                            else -> println("Opción no válida") // si mete un número q no vale
                         }
-                    } while (operacion != 3)
+                    } while (operacion != 3) // repite el menú hasta q elige cerrar sesión
                 }
 
-                salida.close()  // cerramos el flujo de salida.
-                entrada.close()  // cerramos el flujo de entrada.
-                cliente.close()  // cerramos el socket.
+                salida.close() // cierra el flujo de salida
+                entrada.close() // cierra el flujo de entrada
+                cliente.close() // cierra la conexión
 
-            } catch (e: Exception) {   // si hay un error en el bloque try.
-                println("Error en la comunicación con el servidor: ${e.message}")
+            } catch (e: Exception) { // si algo falla muestra error
+                println("Error en la comunicación: ${e.message}")
             }
         }
     }
 }
 
-
 fun main() {
-    val clienteSSL = ClienteSSL()   // creamos un objeto ClienteSSL.
-    clienteSSL.iniciar()  // ejecutamos el cliente.
+    ClienteSSL().iniciar() // ejecuta el cliente
 }

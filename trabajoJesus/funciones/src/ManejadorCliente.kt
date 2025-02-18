@@ -1,4 +1,3 @@
-
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.FileWriter
@@ -8,106 +7,76 @@ import java.time.format.DateTimeFormatter
 import javax.net.ssl.SSLSocket
 import javax.crypto.spec.SecretKeySpec
 
-
+// esta clase se encarga de manejar al cliente q se conecta al servidor ssl
 class ManejadorCliente(private val cliente: SSLSocket) : Runnable {
-    // este es el metodo que se ejecuta cuando empieza el hilo
     override fun run() {
         try {
-            // creamos los flujos para leer y escribir datos con el cliente
+            // se crean las entradas y salidas de datos par hablar con el cliente
             val entrada = DataInputStream(cliente.inputStream)
             val salida = DataOutputStream(cliente.outputStream)
 
-            // leemos la opcion que el cliente elige (registro o login)
+            // se lee la opcion q mando el cliente y sus credenciales
             val opcion = entrada.readInt()
             val nombreUsuario = entrada.readUTF()
             val contraseña = entrada.readUTF()
 
-            // si elige 1, es que quiere registrar un nuevo usuario
             when (opcion) {
-                1 -> {
-                    // registramos al usuario en el gestor de usuarios
+                1 -> { // si la opcion es 1, se registra el usuario
                     GestorUsuarios.registrarUsuario(nombreUsuario, contraseña)
-                    // le decimos al cliente que se registro correctamente
                     salida.writeUTF("Usuario registrado exitosamente")
                 }
-                2 -> {
-                    // si elige 2, intenta hacer login
+                2 -> { // si la opcion es 2, intenta iniciar sesion
                     if (GestorUsuarios.autenticarUsuario(nombreUsuario, contraseña)) {
-                        // si la autenticacion es correcta, le decimos que entro bien
                         salida.writeUTF("Autenticación exitosa")
-
                         var operacion: String
                         do {
-                            // leemos la operacion que quiere hacer el cliente
                             operacion = entrada.readUTF()
                             when (operacion) {
-                                "ENVIAR_MENSAJE" -> {
-                                    // si quiere enviar un mensaje, leemos el mensaje cifrado y la clave
+                                "ENVIAR_MENSAJE" -> { // si el cliente manda un mensaje
                                     val mensajeCifrado = entrada.readUTF()
-                                    val claveBytes = ByteArray(16) // clave de tamaño AES-128
-                                    entrada.readFully(claveBytes) // leemos la clave
-                                    val clave = SecretKeySpec(claveBytes, "AES") // creamos la clave AES
-
-                                    // desciframos el mensaje
+                                    val claveBytes = ByteArray(16)
+                                    entrada.readFully(claveBytes)
+                                    val clave = SecretKeySpec(claveBytes, "AES")
                                     val mensajeDescifrado = UtilesCripto.descifrar(mensajeCifrado, clave)
                                     println("Mensaje recibido de $nombreUsuario: $mensajeDescifrado")
-
-                                    // le decimos al cliente que todo0 fue bien
                                     salida.writeUTF("Mensaje recibido y descifrado correctamente")
                                 }
-                                "GUARDAR" -> {
-                                    // si quiere guardar informacion, leemos la informacion
+                                "GUARDAR" -> { // si el cliente manda datos para guardar en un archivo
                                     val informacion = entrada.readUTF()
-
-                                    // obtenemos la fecha y hora de ahora
                                     val fechaActual = LocalDateTime.now()
                                     val formatoFecha = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                                     val fechaFormateada = fechaActual.format(formatoFecha)
-
-                                    // creamos la linea con la informacion
                                     val linea = "[Usuario: $nombreUsuario, Fecha: $fechaFormateada] $informacion"
 
-                                    // intentamos guardar la informacion en un archivo
                                     try {
-
                                         val rutaFichero = "C:\\Users\\luis\\Desktop\\trabajoJesus\\funciones\\src\\informacion.txt"
-                                        val archivo = java.io.File(rutaFichero)
-
-                                        // abrimos el archivo en modo append (para añadir al final)
-                                        val escritor = BufferedWriter(FileWriter(archivo, true))
-                                        escritor.write(linea) // escribimos la linea en el archivo
-                                        escritor.newLine() // añadimos un salto de linea
-                                        escritor.close() // cerramos el escritor
-
-                                        // le decimos al cliente que todoo fue bien
-                                        salida.writeUTF("Información guardada correctamente en el fichero.")
+                                        val escritor = BufferedWriter(FileWriter(rutaFichero, true))
+                                        escritor.write(linea)
+                                        escritor.newLine()
+                                        escritor.close()
+                                        salida.writeUTF("Información guardada correctamente")
                                     } catch (e: Exception) {
-                                        // si hubo un error al guardar, se lo decimos al cliente
-                                        salida.writeUTF("Error al guardar la información en el fichero: ${e.message}")
+                                        salida.writeUTF("Error al guardar: ${e.message}")
                                     }
                                 }
-                                else -> {
-                                    // si la operacion no es reconocida, le decimos que no es valida
-                                    salida.writeUTF("Operación no válida")
+                                "CERRAR" -> { // si el cliente quiere cerrar sesion
+                                    println("$nombreUsuario cerró sesión")
+                                    break
                                 }
+                                else -> salida.writeUTF("Operación no válida") // si el cliente mando algo q no se entiende
                             }
-                        } while (operacion != "CERRAR") // mientras la operacion no sea cerrar seguimos
+                        } while (true)
                     } else {
-                        // si no se autentica correctamente, le decimos que fallo
-                        salida.writeUTF("Autenticación fallida")
+                        salida.writeUTF("Autenticación fallida") // si la contraseña no es correcta
                     }
                 }
-                else -> {
-                    // si la opcion no es 1 ni 2, le decimos que la opcion no es valida
-                    salida.writeUTF("Opción no válida")
-                }
+                else -> salida.writeUTF("Opción no válida") // si el usuario manda algo q no sea 1 ni 2
             }
         } catch (e: Exception) {
-            // si pasa un error, mostramos el error
-            e.printStackTrace()
+            e.printStackTrace() // si hay un error, lo muestra en la consola
         } finally {
-            // al final siempre cerramos la conexion con el cliente
-            cliente.close()
+            cliente.close() // se cierra la conexion con el cliente
+            println("Conexión cerrada con ${cliente.inetAddress.hostAddress}")
         }
     }
 }
