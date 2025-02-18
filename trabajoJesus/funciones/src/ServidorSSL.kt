@@ -1,3 +1,4 @@
+
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.KeyManagerFactory
@@ -6,46 +7,56 @@ import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.TrustManagerFactory
 
+
 class ServidorSSL {
-    fun main() {
+    fun iniciar() {
         val rutaAlmacen = "C:\\Users\\luis\\Desktop\\trabajoJesus\\funciones\\src\\almacen"
 
-        // Verificar si el archivo existe
-        val file = java.io.File(rutaAlmacen)
-        if (!file.exists()) {
+        // verificamos si el archivo del almacen existe
+        val archivo = java.io.File(rutaAlmacen)
+        if (!archivo.exists()) {
             println("ERROR: No se encontró el archivo de almacén en la ruta: $rutaAlmacen")
-            return
+            return // si no existe, salimos de la funcion
         }
 
-        // Cargar el almacén de claves
+        // cargamos el almacen de claves con el archivo y la contraseña
         val almacen = KeyStore.getInstance("JKS")
         almacen.load(FileInputStream(rutaAlmacen), "1234567".toCharArray())
 
-        // Inicializar el administrador de claves
-        val manager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
-        manager.init(almacen, "1234567".toCharArray())
+        // inicializamos el gestor de claves con el almacen y la contraseña
+        val gestorClaves = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
+        gestorClaves.init(almacen, "1234567".toCharArray())
 
-        // Inicializar el administrador de confianza
-        val confianza = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        confianza.init(almacen)
+        // inicializamos el gestor de confianza q usa el mismo almacen
+        val gestorConfianza = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        gestorConfianza.init(almacen)
 
-        // Crear el contexto SSL
+        // creamos el contexto ssl para manejar conexiones seguras
         val contexto = SSLContext.getInstance("TLS")
-        contexto.init(manager.keyManagers, confianza.trustManagers, null)
+        contexto.init(gestorClaves.keyManagers, gestorConfianza.trustManagers, null)
 
-        // Crear el socket SSL del servidor
-        val socketFabrica = contexto.serverSocketFactory
-        val servidorSSL = socketFabrica.createServerSocket(6000) as SSLServerSocket
+        // creamos el socket ssl del servidor
+        val fabricaSocket = contexto.serverSocketFactory
+        val servidorSSL = fabricaSocket.createServerSocket(6000) as SSLServerSocket
 
-        println("Servidor iniciado, esperando conexiones...")
+        println("servidor iniciado, esperando conexiones...")
 
-        while (true) {
-            // Aceptar conexiones de clientes
+        while (true) { // bucle infinito para aceptar clientes
+            // aceptamos la conexion de un cliente
             val cliente = servidorSSL.accept() as SSLSocket
-            println("Cliente conectado: ${cliente.inetAddress.hostAddress}")
+            println("cliente conectado: ${cliente.inetAddress.hostAddress}")
 
-            // Manejar cada cliente en un hilo separado
-            Thread(ClientHandler(cliente)).start()
+            // creamos un hilo pa manejar el cliente
+            Thread(ManejadorCliente(cliente)).start()
         }
     }
+}
+
+
+fun main() {
+
+    GestorUsuarios.registrarUsuario("usuario", "contraseña")
+
+    // iniciamos el servidor
+    ServidorSSL().iniciar()
 }
